@@ -221,6 +221,11 @@ class TreeCase(unittest.TestCase):
         self.tree.to_json()
         self.tree.to_json(True)
 
+    def test_from_dict(self):
+        d = self.tree.to_dict(with_data=True)
+        new_tree = self.tree.from_dict(d, with_data=True)
+        self.assertEqual(d, new_tree.to_dict(with_data=True))
+
     def test_siblings(self):
         self.assertEqual(len(self.tree.siblings("hárry")) == 0, True)
         self.assertEqual(self.tree.siblings("jane")[0].identifier == "bill",

@@ -738,6 +738,48 @@ class Tree(object):
                             {ntag: {"data":self[nid].data}}
             return tree_dict
 
+    @classmethod
+    def from_dict(cls, tree_dict, parent_nid=None, with_data=False,
+                  data_key="data", default_data=None, children_key="children",
+                  *args, **kwargs):
+        """
+        Load dictionary into `treelib.tree.Tree`.  Can either construct a new
+        tree or graft onto an existing tree via parent_nid and constructor
+        args.
+
+        By default accepts dictionaries dumped by `Tree.to_dict()` with
+        optional data.  Can also accept arbitrary dictionaries by setting
+        data_key to `None`
+
+        Returns the tree object the dictionary is loaded into
+        """
+
+        tree = cls(*args, **kwargs)
+
+        def recurse(d, parent):
+            dcopy = deepcopy(d)
+            assert len(d) == 1
+            for k, v in dcopy.items():
+                if children_key in v.keys():
+                    children = v.pop(children_key)
+                else:
+                    children = []
+
+                if with_data:
+                    data = v if not data_key else v.get(data_key, default_data)
+                    node = Node(tag=k, data=data)
+                else:
+                    node = Node(tag=k)
+
+                tree.add_node(node, parent)
+
+                for n in children:
+                    recurse(n, node)
+
+        recurse(tree_dict, parent_nid)
+
+        return tree
+
     def to_json(self, with_data=False, sort=True, reverse=False):
         """Return the json string corresponding to self"""
         return json.dumps(self.to_dict(with_data=with_data, sort=sort, reverse=reverse))
